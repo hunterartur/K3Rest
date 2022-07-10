@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+    <meta charset="UTF-8">
+    <title>Spring Security Example</title>
+</head>
+<body>
+<style>
+    .error {
+        color: red;
+    }
+</style>
+    <form th:action="@{/admin/update}" th:object="${user}" th:method="put">
+        <input class="error" type="hidden" th:field="*{id}">
+        <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name Error</p>
+        <label for="name">Name</label>
+        <input id="name" th:placeholder="name" type="text" th:field="*{name}">
+        <br>
+        <br>
+        <p class="error" th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}">Name Error</p>
+        <label for="name">Surname</label>
+        <input id="surname" th:placeholder="surname" type="text" th:field="*{surname}">
+        <br>
+        <br>
+        <p class="error" th:if="${#fields.hasErrors('age')}" th:errors="*{age}">Name Error</p>
+        <label for="age">Surname</label>
+        <input id="age" type="text" th:placeholder="age" th:field="*{age}">
+        <br>
+        <br>
+        <p class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Name Error</p>
+        <label for="email">Name</label>
+        <input id="email" th:placeholder="email" type="text" th:field="*{email}">
+        <br>
+        <br>
+        <input type="submit" value="send">
+    </form>
+<br>
+<br>
+<a sec:authorize="isAuthenticated()" href="/logout">Logout</a>
+</body>
+</html>
