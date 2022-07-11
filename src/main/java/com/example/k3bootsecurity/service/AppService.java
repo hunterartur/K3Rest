@@ -9,8 +9,10 @@ public interface AppService<T> {
 
     List<T> getAll();
 
-    void saveOrUpdate(T object);
+    T saveOrUpdate(T object);
 
-    void remove(T object);
+    void remove(Long id);
+
+    boolean exists(String name);
 
 }

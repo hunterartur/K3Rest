@@ -1,82 +1,114 @@
 package com.example.k3bootsecurity.controller;
 
-import com.example.k3bootsecurity.entity.Role;
-import com.example.k3bootsecurity.entity.UserEntity;
+import com.example.k3bootsecurity.dto.RoleDto;
+import com.example.k3bootsecurity.dto.RoleMapper;
+import com.example.k3bootsecurity.dto.UserMapper;
 import com.example.k3bootsecurity.dto.UserDto;
+import com.example.k3bootsecurity.entity.RoleEntity;
+import com.example.k3bootsecurity.entity.UserEntity;
 import com.example.k3bootsecurity.service.AppService;
-import org.springframework.security.access.prepost.PreAuthorize;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
-import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@PreAuthorize("hasAnyRole('ADMIN')")
-@Controller
-@RequestMapping(path = "/admin")
+@Slf4j
+//@PreAuthorize("hasAnyRole('ADMIN')")
+@RestController
+@RequestMapping(path = "/api/admin")
 public class AdminController {
 
     private final PasswordEncoder passwordEncoder;
-    private final AppService<UserEntity> entityAppService;
-    private final AppService<Role> roleAppService;
+    private final AppService<UserEntity> userAppService;
+    private final AppService<RoleEntity> roleAppService;
+    private final UserMapper userMapper;
+    private final RoleMapper roleMapper;
+    private final HttpHeaders headers;
 
-    public AdminController(AppService<UserEntity> service, AppService<Role> roleAppService, PasswordEncoder passwordEncoder) {
-        this.entityAppService = service;
+    {
+        headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json; charset=utf-8");
+        headers.add("Content-Language", "ru-RU");
+    }
+
+    public AdminController(AppService<UserEntity> service, AppService<RoleEntity> roleAppService,
+                           PasswordEncoder passwordEncoder, UserMapper userMapper, RoleMapper roleMapper) {
+        this.userAppService = service;
         this.roleAppService = roleAppService;
         this.passwordEncoder = passwordEncoder;
+        this.userMapper = userMapper;
+        this.roleMapper = roleMapper;
     }
 
-    @GetMapping(path = "")
-    public String allUsers(ModelMap model, Principal principal) {
-        List<UserEntity> entities = entityAppService.getAll();
-        List<UserDto> users = entities.stream().map(UserEntity::toUser).collect(Collectors.toList());
-        List<Role> roleList = roleAppService.getAll();
-        UserEntity userEntity = entityAppService.getByName(principal.getName());
-        model.addAttribute("users", users);
-        model.addAttribute("newUser", new UserEntity());
-        model.addAttribute("roleList", roleList);
-        model.addAttribute("principal", userEntity);
-        return "index";
+    @GetMapping(path = "/users/")
+    public ResponseEntity<List<UserDto>> index() {
+        List<UserDto> userDtos = userAppService.getAll().stream().map(userMapper::toUserDto).collect(Collectors.toList());
+        log.info("Get all users!");
+        return !userDtos.isEmpty() ? new ResponseEntity<>(userDtos, headers, HttpStatus.OK)
+                : new ResponseEntity<>(headers, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @PutMapping(path = "/update")
-    public String update(@Valid @ModelAttribute("user") UserDto user, @RequestParam("roles") List<Role> roles) {
-            System.out.println(user);
-            UserEntity userEntity = entityAppService.getById(user.getId());
-            userEntity.fromUser(user);
-            if (!roles.isEmpty()) {
-                userEntity.setRoles(roles);
+    @GetMapping(path = "/users/{id}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+        UserDto userDto = userMapper.toUserDto(userAppService.getById(id));
+        log.info(String.format("Get user by id = %d", userDto.getId()));
+        return (userDto != null) ? new ResponseEntity<>(userDto, headers, HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @PostMapping(path = "/users/")
+    public ResponseEntity<UserDto> saveUser(@RequestBody UserEntity userEntity) {
+        try {
+            if (!userAppService.exists(userEntity.getEmail())) {
+                userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
+                UserDto userDto = userMapper.toUserDto(userAppService.saveOrUpdate(userEntity));
+                log.info(String.format("Save user id = %d", userDto.getId()));
+                return new ResponseEntity<>(userDto, headers, HttpStatus.CREATED);
+            } else {
+                log.warn(String.format("A user with such an %s exists", userEntity.getEmail()));
+                return new ResponseEntity<>(HttpStatus.CONFLICT);
             }
-            entityAppService.saveOrUpdate(userEntity);
-            return "redirect:/admin";
-    }
-
-    @DeleteMapping(path = "/deleteUser")
-    public String deleteUser(@RequestParam Long id) {
-        UserEntity entity = entityAppService.getById(id);
-        entityAppService.remove(entity);
-        return "redirect:/admin";
-    }
-
-    @PostMapping(path = "/create")
-    public String create(@Valid @ModelAttribute("user") UserEntity userEntity, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            return "/createUser";
-        } else {
-            //сделать проверку на null boolean полей
-            userEntity.setEnabled(userEntity.getEnabled() != null);
-            userEntity.setExpired(userEntity.getExpired() != null);
-            userEntity.setLocked(userEntity.getLocked() != null);
-            String password = passwordEncoder.encode(userEntity.getPassword());
-            userEntity.setPassword(password);
-            entityAppService.saveOrUpdate(userEntity);
-            return "redirect:/admin";
+        } catch (Exception e) {
+            log.error("Failed to save user");
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    @PutMapping(path = "/users/")
+    public ResponseEntity<UserDto> updateUser(@RequestBody UserDto userDto) {
+        try {
+            UserEntity userEntity = userMapper.toUserEntity(userDto);
+            UserDto userUpdatedDto = userMapper.toUserDto(userEntity);
+            log.info(String.format("Updating user id = %d", userUpdatedDto.getId()));
+            return new ResponseEntity<>(userUpdatedDto, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error(String.format("Error updating user id = %d", userDto.getId()));
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping(path = "/users/{id}")
+    public ResponseEntity<HttpStatus> deleteUser(@PathVariable Long id) {
+        try {
+            userAppService.remove(id);
+            log.info(String.format("Deleting a user id = %d", id));
+            return new ResponseEntity<>(headers, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error(String.format("Error when deleting user id = %d", id));
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping(path = "/roles/")
+    public ResponseEntity<List<RoleDto>> getAllRoles() {
+        List<RoleEntity> roleEntities = roleAppService.getAll();
+        List<RoleDto> roleDtos = roleEntities.stream().map(roleMapper::toRoleDto).collect(Collectors.toList());
+        return !roleDtos.isEmpty() ? new ResponseEntity<>(roleDtos, headers, HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
