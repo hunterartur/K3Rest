@@ -82,7 +82,7 @@ public class AdminController {
     @PutMapping(path = "/users/")
     public ResponseEntity<UserDto> updateUser(@RequestBody UserDto userDto) {
         try {
-            UserEntity userEntity = userMapper.toUserEntity(userDto);
+            UserEntity userEntity = userAppService.saveOrUpdate(userMapper.toUserEntity(userDto));
             UserDto userUpdatedDto = userMapper.toUserDto(userEntity);
             log.info(String.format("Updating user id = %d", userUpdatedDto.getId()));
             return new ResponseEntity<>(userUpdatedDto, headers, HttpStatus.OK);
