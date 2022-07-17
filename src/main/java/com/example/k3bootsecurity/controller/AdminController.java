@@ -7,10 +7,14 @@ import com.example.k3bootsecurity.dto.UserDto;
 import com.example.k3bootsecurity.entity.RoleEntity;
 import com.example.k3bootsecurity.entity.UserEntity;
 import com.example.k3bootsecurity.service.AppService;
+import com.example.k3bootsecurity.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +22,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-//@PreAuthorize("hasAnyRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping(path = "/api/admin")
 public class AdminController {
 
+    private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
     private final AppService<UserEntity> userAppService;
     private final AppService<RoleEntity> roleAppService;
@@ -37,12 +42,13 @@ public class AdminController {
     }
 
     public AdminController(AppService<UserEntity> service, AppService<RoleEntity> roleAppService,
-                           PasswordEncoder passwordEncoder, UserMapper userMapper, RoleMapper roleMapper) {
+                           PasswordEncoder passwordEncoder, UserMapper userMapper, RoleMapper roleMapper, AuthService authService) {
         this.userAppService = service;
         this.roleAppService = roleAppService;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
         this.roleMapper = roleMapper;
+        this.authService = authService;
     }
 
     @GetMapping(path = "/users/")
@@ -110,5 +116,11 @@ public class AdminController {
         List<RoleDto> roleDtos = roleEntities.stream().map(roleMapper::toRoleDto).collect(Collectors.toList());
         return !roleDtos.isEmpty() ? new ResponseEntity<>(roleDtos, headers, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @GetMapping(path = "/info")
+    public ResponseEntity<UserDto> getAuthentication() {
+        UserDto userDto = userMapper.toUserDto((UserEntity) authService.getAuthInfo().getPrincipal());
+        return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
 }

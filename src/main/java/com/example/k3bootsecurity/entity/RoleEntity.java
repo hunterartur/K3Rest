@@ -37,4 +37,12 @@ public class RoleEntity implements GrantedAuthority {
     public String getAuthority() {
         return name;
     }
+
+    @Override
+    public String toString() {
+        return "RoleEntity{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }
