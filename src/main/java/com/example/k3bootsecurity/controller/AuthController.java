@@ -15,12 +15,12 @@ import javax.security.auth.message.AuthException;
 
 @Slf4j
 @RestController
-@RequestMapping(path = "/api/authenticate")
-public class AuthenticationController {
+    @RequestMapping(path = "/api/auth")
+public class AuthController {
 
     private final AuthService authService;
 
-    public AuthenticationController(AuthService authService) {
+    public AuthController(AuthService authService) {
         this.authService = authService;
     }
 

@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 public class AdminController {
 
     private final AuthService authService;
-    private final PasswordEncoder passwordEncoder;
     private final AppService<UserEntity> userAppService;
     private final AppService<RoleEntity> roleAppService;
     private final UserMapper userMapper;
@@ -42,10 +41,9 @@ public class AdminController {
     }
 
     public AdminController(AppService<UserEntity> service, AppService<RoleEntity> roleAppService,
-                           PasswordEncoder passwordEncoder, UserMapper userMapper, RoleMapper roleMapper, AuthService authService) {
+                           UserMapper userMapper, RoleMapper roleMapper, AuthService authService) {
         this.userAppService = service;
         this.roleAppService = roleAppService;
-        this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
         this.roleMapper = roleMapper;
         this.authService = authService;
@@ -71,7 +69,6 @@ public class AdminController {
     public ResponseEntity<UserDto> saveUser(@RequestBody UserEntity userEntity) {
         try {
             if (!userAppService.exists(userEntity.getEmail())) {
-                userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
                 UserDto userDto = userMapper.toUserDto(userAppService.saveOrUpdate(userEntity));
                 log.info(String.format("Save user id = %d", userDto.getId()));
                 return new ResponseEntity<>(userDto, headers, HttpStatus.CREATED);

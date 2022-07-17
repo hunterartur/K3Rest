@@ -5,10 +5,13 @@ import com.example.k3bootsecurity.domain.JwtResponse;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.security.auth.message.AuthException;
@@ -23,10 +26,13 @@ public class AuthService {
     private final UserDetailsService service;
     private final JwtProvider jwtProvider;
     private final Map<String, String> refreshStorage = new HashMap<>();
+    @Lazy
+    @Autowired
+    private final PasswordEncoder passwordEncoder;
 
     public JwtResponse login(JwtRequest authRequest) throws AuthException {
         final UserDetails userDetails = service.loadUserByUsername(authRequest.getLogin());
-        if (userDetails.getUsername().equals(authRequest.getLogin())) {
+        if (passwordEncoder.matches(authRequest.getPassword(), userDetails.getPassword())) {
             final String accessToken = jwtProvider.generateAccessToken(userDetails);
             final String refreshToken = jwtProvider.generateRefreshToken(userDetails);
             refreshStorage.put(userDetails.getUsername(), refreshToken);

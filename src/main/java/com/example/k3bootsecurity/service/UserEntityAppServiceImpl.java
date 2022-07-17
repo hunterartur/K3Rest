@@ -2,9 +2,12 @@ package com.example.k3bootsecurity.service;
 
 import com.example.k3bootsecurity.entity.UserEntity;
 import com.example.k3bootsecurity.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,9 +20,11 @@ public class UserEntityAppServiceImpl implements AppService<UserEntity>, UserDet
     private final static String USER_NOT_FOUND_BY_ID_MSG = "User with id %d not found";
 
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserEntityAppServiceImpl(UserRepository repository) {
+    public UserEntityAppServiceImpl(UserRepository repository, @Lazy PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -38,8 +43,9 @@ public class UserEntityAppServiceImpl implements AppService<UserEntity>, UserDet
     }
 
     @Override
-    public UserEntity saveOrUpdate(UserEntity object) {
-        return repository.save(object);
+    public UserEntity saveOrUpdate(UserEntity userEntity) {
+        userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
+        return repository.save(userEntity);
     }
 
     @Override
