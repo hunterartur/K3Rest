@@ -33,19 +33,6 @@ public class JWTFilter extends GenericFilterBean {
         this.userDetailsService = userDetailsService;
     }
 
-//    @Override
-//    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-//        final String token = getTokenFromRequest(request);
-//        if (token != null && jwtProvider.validateAccessToken(token)) {
-//            final Claims claims = jwtProvider.getAccessClaims(token);
-//            UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
-//            final Authentication authentication =
-//                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-//            SecurityContextHolder.getContext().setAuthentication(authentication);
-//        }
-//        filterChain.doFilter(request, response);
-//    }
-
     private String getTokenFromRequest(HttpServletRequest request) {
         final String bearer = request.getHeader(AUTHORIZATION);
         if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {

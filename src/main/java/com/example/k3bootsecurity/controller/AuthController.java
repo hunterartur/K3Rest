@@ -15,7 +15,7 @@ import javax.security.auth.message.AuthException;
 
 @Slf4j
 @RestController
-    @RequestMapping(path = "/api/auth")
+@RequestMapping(path = "/api/auth")
 public class AuthController {
 
     private final AuthService authService;

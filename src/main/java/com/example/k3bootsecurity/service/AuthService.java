@@ -36,11 +36,9 @@ public class AuthService {
             final String accessToken = jwtProvider.generateAccessToken(userDetails);
             final String refreshToken = jwtProvider.generateRefreshToken(userDetails);
             refreshStorage.put(userDetails.getUsername(), refreshToken);
-            log.info("login");
-            refreshStorage.entrySet().stream().forEach(stringStringEntry -> log.info(stringStringEntry.toString()));
             return new JwtResponse(accessToken, refreshToken);
         } else {
-            throw new AuthException("Неправильный пароль");
+            throw new AuthException("Incorrect password");
         }
     }
 
@@ -68,12 +66,10 @@ public class AuthService {
                 final String accessToken = jwtProvider.generateAccessToken(userDetails);
                 final String newRefreshToken = jwtProvider.generateRefreshToken(userDetails);
                 refreshStorage.put(userDetails.getUsername(), newRefreshToken);
-                log.info("refresh");
-                refreshStorage.entrySet().stream().forEach(stringStringEntry -> log.info(stringStringEntry.toString()));
                 return new JwtResponse(accessToken, newRefreshToken);
             }
         }
-        throw new AuthException("Невалидный JWT токен");
+        throw new AuthException("Invalid JWT token");
     }
 
     public Authentication getAuthInfo() {
