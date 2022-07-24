@@ -55,7 +55,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(
                         authz -> authz
                                 .antMatchers("/api/auth/login", "/api/auth/token").permitAll()
-                                .mvcMatchers("/user/**", "/api/auth/refresh/**").hasAnyRole("USER", "ADMIN")
+                                .antMatchers("/user/**", "/api/auth/refresh/**").hasAnyRole("USER", "ADMIN")
                                 .antMatchers("/api/admin/**").hasRole("ADMIN")
                                 .anyRequest().denyAll()
                                 .and()
