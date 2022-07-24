@@ -55,7 +55,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(
                         authz -> authz
                                 .antMatchers("/api/auth/login", "/api/auth/token").permitAll()
-                                .mvcMatchers("/api/user/**", "/api/auth/refresh/**").hasAnyRole("USER", "ADMIN")
+                                .mvcMatchers("/user/**", "/api/auth/refresh/**").hasAnyRole("USER", "ADMIN")
                                 .antMatchers("/api/admin/**").hasRole("ADMIN")
                                 .anyRequest().denyAll()
                                 .and()
@@ -68,7 +68,7 @@ public class WebSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "content-type", "x-requested-with", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "x-auth-token", "x-app-id", "Origin","Accept", "X-Requested-With", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "content-type", "x-requested-with", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "x-auth-token", "x-app-id", "Origin","Accept", "X-Requested-With", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

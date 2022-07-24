@@ -2,6 +2,7 @@ package com.example.k3bootsecurity.service;
 
 import com.example.k3bootsecurity.entity.UserEntity;
 import com.example.k3bootsecurity.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class UserEntityAppServiceImpl implements AppService<UserEntity>, UserDetailsService {
 
@@ -44,7 +46,11 @@ public class UserEntityAppServiceImpl implements AppService<UserEntity>, UserDet
 
     @Override
     public UserEntity saveOrUpdate(UserEntity userEntity) {
-        userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
+        if (userEntity.getId() == null) {
+            userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
+        } else {
+            userEntity.setPassword(getById(userEntity.getId()).getPassword());
+        }
         return repository.save(userEntity);
     }
 

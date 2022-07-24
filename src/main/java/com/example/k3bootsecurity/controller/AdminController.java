@@ -114,10 +114,4 @@ public class AdminController {
         return !roleDtos.isEmpty() ? new ResponseEntity<>(roleDtos, headers, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    @GetMapping(path = "/info")
-    public ResponseEntity<UserDto> getAuthentication() {
-        UserDto userDto = userMapper.toUserDto((UserEntity) authService.getAuthInfo().getPrincipal());
-        return new ResponseEntity<>(userDto, HttpStatus.OK);
-    }
 }
